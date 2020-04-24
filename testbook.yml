@@ -6,6 +6,10 @@
   gather_facts: true
   connection: ssh
   tasks: 
+    - name: "update"
+      become_user: root
+      shell: 
+        cmd: apt-get update
     - name: "install apache"
       package: name=apache2 state=present
     - name: "git"
