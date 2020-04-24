@@ -18,5 +18,9 @@
       package: name=curl state=present
     - name: "mosquitto server"
       package: name=mosquitto state=present
+    - name: "update"
+      become_user: root
+      shell: 
+        cmd: apt-get update
 
 
