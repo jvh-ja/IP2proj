@@ -18,6 +18,5 @@
       package: name=curl state=present
     - name: "mosquitto server"
       package: name=mosquitto state=present
-    - name: "mosquitto-clients server"
-      package: name=mosquitto-clients state=present
+
 
