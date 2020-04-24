@@ -1,0 +1,73 @@
+---
+- name: IP2
+  hosts: all
+  become: true
+  become_user: root
+  gather_facts: true
+  connection: ssh
+  tasks: 
+    - name: "install apache"
+      package: name=apache2 state=present
+    - name: "git"
+      package: name=git state=present
+    - name: "curl"
+      package: name=curl state=present
+    - name: "get dotnet package"
+      become_user: root
+      get_url: 
+        url: https://packages.microsoft.com/keys/microsoft.asc
+        dest: /
+    - name: "gpg"
+      become_user: root
+      shell: 
+        cmd: cat /microsoft.asc | gpg --dearmor > microsoft.gpg
+    - name: "Move package"
+      become_user: root
+      command: sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+    - name: "package add to sources"
+      become_user: root
+      command: sh -c "echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-bionic-prod bionic main" > /etc/apt/sources.list.d/dotnetdev.list"
+    - name: "dotnet workarround"
+      become_user: root
+      command: wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+    - name: "dotnet packages"
+      become_user: root
+      command: dpkg -i packages-microsoft-prod.deb
+    - name: "install software-properties-common"
+      package: name=software-properties-common state=present
+    - name: "dotnet add repo"
+      become_user: root
+      command: add-apt-repository universe
+    - name: "dotnet apt transport"
+      package: name=apt-transport-https state=present
+    - name: "dpkg problem"
+      become_user: root
+      shell: 
+        cmd: echo "Y" | dpkg --configure -a
+    - name: "update"
+      become_user: root
+      shell: 
+        cmd: apt-get update
+    - name: "dotnet-sdk-2.2"
+      package: name=dotnet-sdk-2.2 state=present
+    - name: "npm"
+      package: name=npm state=present
+    - name: "node.js"
+      package: name=nodejs state=present
+    - name: "mosquitto server"
+      package: name=mosquitto state=present
+    - name: "mosquitto-clients server"
+      package: name=mosquitto-clients state=present
+    - name: "Get project"
+      become_user: root
+      git: 
+         repo: 'https://339f464194973a59cdd4fe509a8a1b71f03c663c@github.com/IliasEM/CityOfIdeas'
+         dest: /Project 
+    - name: "replace"
+      become_user: root
+      shell: 
+        cmd: sed -i -e 's/optionsBuilder.UseMySql(ConnectionString).UseLazyLoadingProxies();/optionsBuilder.UseSqlite("Data Source=PlatformDb_test.db");/g' /Project/UI_MVC/appsettings.json
+    - name: "run app"
+      become_user: root
+      command: dotnet run --urls=http://*:5000 --project=/Project/DAL/EF/ApplicationDbContext.cs
+
